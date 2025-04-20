@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time Depth Estimation and Object Detection Dashboard</title>
+    <style>
+        .led {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: inline-block;
+            margin: 20px;
+            border: 2px solid #000;
+        }
+        #red { background-color: grey; }
+        #yellow { background-color: grey; }
+        #green { background-color: grey; }
+
+        img {
+            width: 100%;
+            height: auto;
+        }
+    </style>
+   <script>
+    let lastColor = '';
+
+    function updateLED(color) {
+        document.getElementById('red').style.backgroundColor = (color === 'red') ? 'red' : 'grey';
+        document.getElementById('yellow').style.backgroundColor = (color === 'yellow') ? 'yellow' : 'grey';
+        document.getElementById('green').style.backgroundColor = (color === 'green') ? 'green' : 'grey';
+
+        if (color === 'red' && lastColor !== 'red') {
+            document.getElementById('alert-sound').play();
+        }
+
+        lastColor = color;
+    }
+
+    function checkDistance() {
+        fetch('/distance')
+            .then(response => response.json())
+            .then(data => {
+                const distance = data.average_distance;
+                if (distance < 5) {
+                    updateLED('red');
+                } else if (distance <= 20) {
+                    updateLED('yellow');
+                } else {
+                    updateLED('green');
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching distance:', error);
+                updateLED(null);
+            });
+    }
+
+    setInterval(checkDistance, 1000); // call every second
+</script>
+
+</head>
+<body>
+    <h1>Real-Time Depth Estimation and Object Detection Dashboard</h1>
+    <img src="/video_feed" onerror="console.error('Failed to load video stream')">
+    <div>
+        <div id="red" class="led"></div>
+        <div id="yellow" class="led"></div>
+        <div id="green" class="led"></div>
+    </div>
+    <audio id="alert-sound" src="alert.mp3" preload="auto"></audio>
+
+</body>
+</html>
